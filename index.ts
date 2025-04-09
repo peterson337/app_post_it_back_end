@@ -1,7 +1,11 @@
-import fs from "fs";
+import express from "express";
 
-const teste = (a: number) => {
-  console.log(a + 2);
-};
+const app = express();
 
-teste(5);
+app.listen(5000, () => {
+  console.log("Server is running on port 5000");
+});
+
+app.get("/", (req: any, res: any) => {
+  res.send("Hello World!");
+});
