@@ -18,6 +18,54 @@ const bcrypt_1 = __importDefault(require("bcrypt"));
 const express_1 = require("express");
 const routes = (0, express_1.Router)();
 routes.use((0, cors_1.default)({ origin: "*" }));
+const findUserById = (userId) => __awaiter(void 0, void 0, void 0, function* () {
+    const userExists = yield db_1.default.findById(userId, "-senha");
+    return userExists;
+});
+//prettier-ignore
+routes.get("/carregar-backup/:userId", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const userExists = yield findUserById(req.params.userId);
+    if (userExists) {
+        return res.status(200).json({
+            message: "Tarefas recuperadas com sucesso",
+            tasks: userExists.listaDeTarefas,
+        });
+    }
+    if (!userExists) {
+        return res.status(400).json({ message: "Usuário não encontrado" });
+    }
+}));
+//prettier-ignore
+routes.post("/backup/:userId", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    //prettier-ignore
+    const userExists = yield db_1.default.findById(req.params.userId, "-senha");
+    if (!userExists) {
+        return res.status(400).json({ message: "Usuário não encontrado" });
+    }
+    if (req.body.tasks.length === 0) {
+        return res.status(400).json({ message: "Precisa ter no mínimo uma tarefa salva para fazer backup" });
+    }
+    const task = req.body.tasks.map((item) => item);
+    if (userExists) {
+        const validation = userExists.listaDeTarefas.filter(item => item.id === req.body.id);
+        if (validation) {
+            validation.map(item => {
+                item.id = req.body.id;
+                item.nomeGrupoTarefa = req.body.nomeGrupoTarefa;
+                item.tasks = task;
+            });
+            if (validation.length === 0) {
+                userExists.listaDeTarefas.push({
+                    nomeGrupoTarefa: req.body.nomeGrupoTarefa,
+                    id: req.body.id,
+                    tasks: task,
+                });
+            }
+        }
+        yield userExists.save();
+        return res.status(200).json({ message: "Backup realizado com sucesso" });
+    }
+}));
 routes.post("/login", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { userName, senha } = req.body;
     const user = {
@@ -33,7 +81,10 @@ routes.post("/login", (req, res) => __awaiter(void 0, void 0, void 0, function* 
         senhaCriptografada &&
         (yield bcrypt_1.default.compare(user.senha, senhaCriptografada));
     if (validation) {
-        return res.status(200).json({ message: "Login realizado com sucesso" });
+        return res.status(200).json({
+            message: "Login realizado com sucesso",
+            id: userExists._id,
+        });
     }
     if (!validation) {
         return res.status(400).json({ error: "Senha incorreta" });
@@ -57,7 +108,6 @@ routes.post("/createUser", (req, res) => __awaiter(void 0, void 0, void 0, funct
     }
     const userExists = yield db_1.default.findOne({ userName: userName });
     const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*[!@#$%^&*(),.?":{}|<>])[A-Za-z\d!@#$%^&*(),.?":{}|<>]{8,}$/;
-    ;
     if (!passwordRegex.test(senha)) {
         return res.status(400).json({ error: "A senha deve ter no mínimo 8 caracteres, incluindo uma letra maiúscula, uma letra minúscula, um número e um caractere especial" });
     }

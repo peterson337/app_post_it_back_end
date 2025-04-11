@@ -7,6 +7,7 @@ const dbSchema = new Schema({
   senha: String,
   listaDeTarefas: [
     {
+      id: Number,
       nomeGrupoTarefa: String,
       tasks: [
         {
