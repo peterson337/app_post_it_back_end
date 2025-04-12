@@ -82,11 +82,10 @@ routes.post("/backup/:userId", async (req: Request, res: Response): Promise<any>
 );
 
 routes.post("/login", async (req: Request, res: Response): Promise<any> => {
-  const { userName, senha } = req.body;
+  const { userName } = req.body;
 
   const user = {
     userName: userName,
-    senha: senha,
   };
 
   const userExists = await db.findOne({ userName: user.userName });
@@ -94,67 +93,47 @@ routes.post("/login", async (req: Request, res: Response): Promise<any> => {
   if (!userExists) {
     return res.status(400).json({ error: "Usuário não encontrado" });
   }
-  const senhaCriptografada = userExists.senha;
 
-  const validation =
-    user.senha &&
-    senhaCriptografada &&
-    (await bcrypt.compare(user.senha, senhaCriptografada));
-
-  if (validation) {
+  if (userExists) {
     return res.status(200).json({
       message: "Login realizado com sucesso",
       id: userExists._id,
     });
   }
 
-  if (!validation) {
-    return res.status(400).json({ error: "Senha incorreta" });
-  }
-
-  if (!userName || !senha) {
+  if (!userName) {
     return res
       .status(400)
-      .json({ error: "O nome do seu usuário e a senha são obrigatórios" });
+      .json({ error: "O nome do seu usuário é obrigatório" });
   }
 
   if (!userExists) {
     return res
       .status(400)
-      .json({ error: "Esta conta não existe, crie a sua conta." });
+      .json({ error: "Este usuário  não existe, crie um usuário." });
   }
 });
 
 //prettier-ignore
 routes.post("/createUser", async (req: Request, res: Response): Promise<any>  => {
-  const { userName, senha } = req.body;
+  const {userName} = req.body;
 
-    if (!userName || !senha) {
-        return res.status(400).json({ error: "O nome do seu usuário e a senha são obrigatórios" });
+    if (!userName) {
+        return res.status(400).json({ error: "O nome do seu usuário é obrigatório" });
     }
 
     const userExists = await db.findOne({ userName: userName });
 
-    const passwordRegex =  /^(?=.*[a-z])(?=.*[A-Z])(?=.*[!@#$%^&*(),.?":{}|<>])[A-Za-z\d!@#$%^&*(),.?":{}|<>]{8,}$/;
-
-    if (!passwordRegex.test(senha)) {
-        return res.status(400).json({ error: "A senha deve ter no mínimo 8 caracteres, incluindo uma letra maiúscula, uma letra minúscula, um número e um caractere especial" });
-    }
+    // const passwordRegex =  /^(?=.*[a-z])(?=.*[A-Z])(?=.*[!@#$%^&*(),.?":{}|<>])[A-Za-z\d!@#$%^&*(),.?":{}|<>]{8,}$/;
 
     if (userExists) {
         return res.status(400).json({ error: "Este usuário já existe" });
     }
 
-  const user = {
-    userName: userName,
-    senha: senha,
-  };
-
-  const passwordHash = await bcrypt.hash(user.senha, 10);
+  // const passwordHash = await bcrypt.hash(user.senha, 10);
 
   db.create({
-    userName: user.userName,
-    senha: passwordHash,
+    userName: userName,
   });
 
   return res.status(200).json();
