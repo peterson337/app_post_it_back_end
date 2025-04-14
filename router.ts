@@ -14,7 +14,12 @@ type Tasks = {
 
 const routes = Router();
 
-routes.use(cors({ origin: "https://app-post-it.vercel.app/" }));
+routes.use(
+  cors({
+    //  origin: "https://app-post-it.vercel.app/"
+    origin: "http://localhost:3000/",
+  })
+);
 
 const findUserById = async (userId: String) => {
   const userExists = await db.findById(userId, "-senha");
