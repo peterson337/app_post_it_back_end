@@ -16,7 +16,20 @@ const cors_1 = __importDefault(require("cors"));
 const db_1 = __importDefault(require("./db"));
 const express_1 = require("express");
 const routes = (0, express_1.Router)();
-routes.use((0, cors_1.default)({ origin: "*" }));
+const rotasPermitidas = [
+    "https://app-post-it.vercel.app",
+    "http://localhost:3000",
+];
+routes.use((0, cors_1.default)({
+    origin: (origin, callback) => {
+        if (!origin || rotasPermitidas.includes(origin)) {
+            callback(null, true);
+        }
+        else {
+            callback(new Error("Not allowed by CORS"));
+        }
+    },
+}));
 const findUserById = (userId) => __awaiter(void 0, void 0, void 0, function* () {
     const userExists = yield db_1.default.findById(userId, "-senha");
     return userExists;

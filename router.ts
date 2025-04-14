@@ -14,10 +14,20 @@ type Tasks = {
 
 const routes = Router();
 
+const rotasPermitidas = [
+  "https://app-post-it.vercel.app",
+  "http://localhost:3000",
+];
+
 routes.use(
   cors({
-    //  origin: "https://app-post-it.vercel.app/"
-    origin: "http://localhost:3000/",
+    origin: (origin, callback) => {
+      if (!origin || rotasPermitidas.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
   })
 );
 
