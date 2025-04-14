@@ -84,14 +84,20 @@ routes.post("/backup/:userId", async (req: Request, res: Response): Promise<any>
 routes.post("/login", async (req: Request, res: Response): Promise<any> => {
   const { userName } = req.body;
 
-  const user = {
-    userName: userName,
-  };
+  if (!userName) {
+    return res
+      .status(400)
+      .json({ error: "O nome do seu usuário é obrigatório" });
+  }
 
-  const userExists = await db.findOne({ userName: user.userName });
+  const nomeFormatado = formatarNome(userName);
+
+  const userExists = await db.findOne({ userName: nomeFormatado });
 
   if (!userExists) {
-    return res.status(400).json({ error: "Usuário não encontrado" });
+    return res
+      .status(400)
+      .json({ error: "Este usuário  não existe, crie um usuário" });
   }
 
   if (userExists) {
@@ -100,29 +106,22 @@ routes.post("/login", async (req: Request, res: Response): Promise<any> => {
       id: userExists._id,
     });
   }
-
-  if (!userName) {
-    return res
-      .status(400)
-      .json({ error: "O nome do seu usuário é obrigatório" });
-  }
-
-  if (!userExists) {
-    return res
-      .status(400)
-      .json({ error: "Este usuário  não existe, crie um usuário." });
-  }
 });
+
+//prettier-ignore
+const formatarNome = (nome : string) => {return nome.trim().toLowerCase().replace(/\s+/g, "");}
 
 //prettier-ignore
 routes.post("/createUser", async (req: Request, res: Response): Promise<any>  => {
   const {userName} = req.body;
 
+    const nomeFormatado =  formatarNome(userName);
+
     if (!userName) {
         return res.status(400).json({ error: "O nome do seu usuário é obrigatório" });
     }
 
-    const userExists = await db.findOne({ userName: userName });
+    const userExists = await db.findOne({ userName: nomeFormatado });
 
     // const passwordRegex =  /^(?=.*[a-z])(?=.*[A-Z])(?=.*[!@#$%^&*(),.?":{}|<>])[A-Za-z\d!@#$%^&*(),.?":{}|<>]{8,}$/;
 
@@ -132,9 +131,8 @@ routes.post("/createUser", async (req: Request, res: Response): Promise<any>  =>
 
   // const passwordHash = await bcrypt.hash(user.senha, 10);
 
-  db.create({
-    userName: userName,
-  });
+   //prettier-ignore
+  // db.create({userName: nomeFormatado});
 
   return res.status(200).json();
 });

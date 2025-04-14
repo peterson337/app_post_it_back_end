@@ -67,12 +67,17 @@ routes.post("/backup/:userId", (req, res) => __awaiter(void 0, void 0, void 0, f
 }));
 routes.post("/login", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { userName } = req.body;
-    const user = {
-        userName: userName,
-    };
-    const userExists = yield db_1.default.findOne({ userName: user.userName });
+    if (!userName) {
+        return res
+            .status(400)
+            .json({ error: "O nome do seu usuário é obrigatório" });
+    }
+    const nomeFormatado = formatarNome(userName);
+    const userExists = yield db_1.default.findOne({ userName: nomeFormatado });
     if (!userExists) {
-        return res.status(400).json({ error: "Usuário não encontrado" });
+        return res
+            .status(400)
+            .json({ error: "Este usuário  não existe, crie um usuário" });
     }
     if (userExists) {
         return res.status(200).json({
@@ -80,32 +85,24 @@ routes.post("/login", (req, res) => __awaiter(void 0, void 0, void 0, function* 
             id: userExists._id,
         });
     }
-    if (!userName) {
-        return res
-            .status(400)
-            .json({ error: "O nome do seu usuário é obrigatório" });
-    }
-    if (!userExists) {
-        return res
-            .status(400)
-            .json({ error: "Este usuário  não existe, crie um usuário." });
-    }
 }));
+//prettier-ignore
+const formatarNome = (nome) => { return nome.trim().toLowerCase().replace(/\s+/g, ""); };
 //prettier-ignore
 routes.post("/createUser", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { userName } = req.body;
+    const nomeFormatado = formatarNome(userName);
     if (!userName) {
         return res.status(400).json({ error: "O nome do seu usuário é obrigatório" });
     }
-    const userExists = yield db_1.default.findOne({ userName: userName });
+    const userExists = yield db_1.default.findOne({ userName: nomeFormatado });
     // const passwordRegex =  /^(?=.*[a-z])(?=.*[A-Z])(?=.*[!@#$%^&*(),.?":{}|<>])[A-Za-z\d!@#$%^&*(),.?":{}|<>]{8,}$/;
     if (userExists) {
         return res.status(400).json({ error: "Este usuário já existe" });
     }
     // const passwordHash = await bcrypt.hash(user.senha, 10);
-    db_1.default.create({
-        userName: userName,
-    });
+    //prettier-ignore
+    // db.create({userName: nomeFormatado});
     return res.status(200).json();
 }));
 exports.default = routes;
