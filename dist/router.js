@@ -115,7 +115,7 @@ routes.post("/createUser", (req, res) => __awaiter(void 0, void 0, void 0, funct
     }
     // const passwordHash = await bcrypt.hash(user.senha, 10);
     //prettier-ignore
-    // db.create({userName: nomeFormatado});
+    db_1.default.create({ userName: nomeFormatado });
     return res.status(200).json();
 }));
 exports.default = routes;
